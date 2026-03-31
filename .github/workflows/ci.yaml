@@ -27,13 +27,11 @@ jobs:
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push images
+      - name: Build and push image
         run: |
           IMAGE_TAG=${GITHUB_SHA::8}
-          docker build -t $ECR_REGISTRY/todo-backend:$IMAGE_TAG ./backend
-          docker push $ECR_REGISTRY/todo-backend:$IMAGE_TAG
-          docker build -t $ECR_REGISTRY/todo-frontend:$IMAGE_TAG ./frontend
-          docker push $ECR_REGISTRY/todo-frontend:$IMAGE_TAG
+          docker build -t $ECR_REGISTRY/todo-app:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/todo-app:$IMAGE_TAG
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Update manifest - deployment.yaml
@@ -50,16 +48,12 @@ jobs:
             const { data: file } = await github.rest.repos.getContent({ owner, repo, path });
             let content = Buffer.from(file.content, 'base64').toString();
             content = content.replace(
-              /( +- name: frontend\n[\s\S]*?image: ).+/m,
-              `$1${registry}/todo-frontend:${imageTag}`
-            );
-            content = content.replace(
-              /( +- name: backend\n[\s\S]*?image: ).+/m,
-              `$1${registry}/todo-backend:${imageTag}`
+              /( +- name: todo-app\n[\s\S]*?image: ).+/m,
+              `$1${registry}/todo-app:${imageTag}`
             );
             await github.rest.repos.createOrUpdateFileContents({
               owner, repo, path,
-              message: `chore: update images to ${imageTag}`,
+              message: `chore: update image to ${imageTag}`,
               content: Buffer.from(content).toString('base64'),
               sha: file.sha,
             });

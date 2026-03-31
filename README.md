@@ -4,23 +4,23 @@
 
 ## 기술 스택
 
-- Frontend: React 18
+- Frontend: React 18 + Nginx
 - Backend: FastAPI (Python 3.12)
-- Container: Docker (Frontend / Backend 별도 이미지)
+- Container: Docker (단일 이미지, supervisord로 nginx + uvicorn 실행)
 - CI/CD: GitHub Actions → ECR → ArgoCD
 
 ## 프로젝트 구조
 
 ```
 todo-app-repository/
+├── Dockerfile         # 단일 이미지 (frontend build + backend + nginx + supervisord)
+├── supervisord.conf   # nginx + uvicorn 프로세스 관리
 ├── frontend/          # React 앱 + Nginx reverse proxy
 │   ├── src/
-│   ├── Dockerfile
 │   ├── nginx.conf
 │   └── package.json
 ├── backend/           # FastAPI 서버
 │   ├── main.py
-│   ├── Dockerfile
 │   └── requirements.txt
 └── .github/workflows/
     └── ci.yaml        # ECR 빌드/푸시 + Manifest 업데이트
@@ -46,7 +46,7 @@ npm start
 ## CI/CD 파이프라인
 
 main 브랜치에 push하면 GitHub Actions가 자동으로:
-1. Backend/Frontend Docker 이미지 각각 빌드
+1. 단일 Docker 이미지 빌드 (frontend build → nginx + backend)
 2. ECR에 푸시 (태그: commit SHA 앞 8자리)
 3. `todo-manifest-repository`의 deployment.yaml 이미지 태그 업데이트
 4. ArgoCD가 변경 감지 후 자동 배포 (Sync)
@@ -70,9 +70,8 @@ main 브랜치에 push하면 GitHub Actions가 자동으로:
 
 ### ECR 레포지토리
 
-다음 2개의 ECR 레포지토리가 필요합니다:
-- `todo-backend`
-- `todo-frontend`
+다음 ECR 레포지토리가 필요합니다:
+- `todo-app`
 
 ### GitHub OIDC IAM Role
 

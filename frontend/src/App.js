@@ -48,6 +48,7 @@ function App() {
   };
 
   const saveEdit = async (id) => {
+    if (!editTitle.trim()) return;
     await fetch(`${API}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -57,45 +58,68 @@ function App() {
     fetchTodos();
   };
 
+  const handleEditKeyDown = (e, id) => {
+    if (e.key === 'Enter') saveEdit(id);
+    if (e.key === 'Escape') setEditId(null);
+  };
+
+  const completedCount = todos.filter(t => t.completed).length;
+
   return (
     <div className="app">
-      <h1>Todo List</h1>
-      <form onSubmit={addTodo} className="add-form">
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Add a new todo..."
-          aria-label="New todo title"
-        />
-        <button type="submit">Add</button>
-      </form>
-      <ul className="todo-list">
-        {todos.map((todo) => (
-          <li key={todo.id} className={todo.completed ? 'completed' : ''}>
-            <input
-              type="checkbox"
-              checked={todo.completed}
-              onChange={() => toggleTodo(todo)}
-              aria-label={`Mark ${todo.title} as ${todo.completed ? 'incomplete' : 'complete'}`}
-            />
-            {editId === todo.id ? (
-              <>
-                <input
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  aria-label="Edit todo title"
-                />
-                <button onClick={() => saveEdit(todo.id)}>Save</button>
-              </>
-            ) : (
-              <>
-                <span onClick={() => startEdit(todo)}>{todo.title}</span>
-                <button onClick={() => deleteTodo(todo.id)} aria-label={`Delete ${todo.title}`}>✕</button>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
+      <div className="app-header">
+        <h1>Todo List</h1>
+        <p>할 일을 추가하고 관리하세요</p>
+      </div>
+      <div className="card">
+        <form onSubmit={addTodo} className="add-form">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="새로운 할 일을 입력하세요..."
+            aria-label="New todo title"
+          />
+          <button type="submit" className="btn-primary">추가</button>
+        </form>
+        {todos.length === 0 ? (
+          <div className="empty-state">아직 할 일이 없습니다</div>
+        ) : (
+          <>
+            <ul className="todo-list">
+              {todos.map((todo) => (
+                <li key={todo.id} className={`todo-item ${todo.completed ? 'completed' : ''}`}>
+                  <input
+                    type="checkbox"
+                    className="checkbox"
+                    checked={todo.completed}
+                    onChange={() => toggleTodo(todo)}
+                    aria-label={`Mark ${todo.title} as ${todo.completed ? 'incomplete' : 'complete'}`}
+                  />
+                  {editId === todo.id ? (
+                    <>
+                      <input
+                        className="edit-input"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        onKeyDown={(e) => handleEditKeyDown(e, todo.id)}
+                        autoFocus
+                        aria-label="Edit todo title"
+                      />
+                      <button className="btn-ghost" onClick={() => saveEdit(todo.id)}>저장</button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="todo-text" onClick={() => startEdit(todo)}>{todo.title}</span>
+                      <button className="btn-delete" onClick={() => deleteTodo(todo.id)} aria-label={`Delete ${todo.title}`}>✕</button>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <div className="counter">{completedCount}/{todos.length} 완료</div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

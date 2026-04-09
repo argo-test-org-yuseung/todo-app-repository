@@ -68,7 +68,7 @@ function App() {
   return (
     <div className="app">
       <div className="app-header">
-        <h1>Todo List</h1>
+        <h1>Todo List Yuseung</h1>
         <p>할 일을 추가하고 관리하세요</p>
       </div>
       <div className="card">
